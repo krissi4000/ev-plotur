@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String?        @unique
+  username     String         @unique
+  passwordHash String?
+  createdAt    DateTime       @default(now())
+
+  sessions     Session[]
+  oauthAccounts OAuthAccount[]
+  libraryEntries LibraryEntry[]
+}
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          OAuthProvider
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Cached MusicBrainz release group data
+model Album {
+  id           String   @id @default(cuid())
+  mbid         String   @unique  // MusicBrainz release group ID
+  title        String
+  artist       String
+  artistMbid   String?
+  releaseYear  Int?
+  genre        String?
+  coverArtUrl  String?
+  cachedAt     DateTime @default(now())
+
+  libraryEntries LibraryEntry[]
+}
+
+model LibraryEntry {
+  id        String      @id @default(cuid())
+  userId    String
+  albumId   String
+  status    ListenStatus @default(UNLISTENED)
+  rating    Int?        // 1-10, null if not rated
+  review    String?
+  addedAt   DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  album Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, albumId])
+}
+
+enum OAuthProvider {
+  GITHUB
+  GOOGLE
+}
+
+enum ListenStatus {
+  UNLISTENED  // in To-Listen list
+  LISTENED    // has been listened to
+}
