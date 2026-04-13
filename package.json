@@ -1,6 +1,9 @@
 {
   "name": "ev",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "client:dev": "vite",
