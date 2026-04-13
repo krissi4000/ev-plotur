@@ -10,7 +10,8 @@
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "exclude": ["node_modules", "client", "prisma", "vitest.config.ts", "vitest.workspace.ts"]
+  "exclude": ["node_modules", "client", "prisma", "prisma.config.ts", "vitest.config.ts", "vitest.workspace.ts"]
 }
