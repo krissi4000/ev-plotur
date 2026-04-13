@@ -13,5 +13,5 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "exclude": ["node_modules", "client", "prisma", "prisma.config.ts", "vitest.config.ts", "vitest.workspace.ts"]
+  "exclude": ["node_modules", "client", "prisma", "prisma.config.ts", "vite.config.ts", "vitest.config.ts", "vitest.workspace.ts"]
 }
