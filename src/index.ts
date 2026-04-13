@@ -17,15 +17,14 @@ const app = new Hono<{
 app.use("*", authMiddleware);
 
 app.use("/static/*", serveStatic({ root: "./public", rewriteRequestPath: (p) => p.replace(/^\/static/, "") }));
+app.use("/assets/*", serveStatic({ root: "./public/dist" }));
 
 app.route("/auth", authRoutes);
 app.route("/search", searchRoutes);
 app.route("/library", libraryRoutes);
 
-app.get("/", (c) => {
-  const username = c.get("username");
-  return c.text(username ? `Hello, ${username}!` : "Hello! Please log in.");
-});
+// serve react app for all non-api routes
+app.get("*", serveStatic({ path: "./public/dist/index.html" }));
 
 const port = parseInt(process.env.PORT ?? "3000", 10);
 serve({ fetch: app.fetch, port }, (info) => {
