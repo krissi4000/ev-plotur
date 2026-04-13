@@ -26,4 +26,20 @@ search.get("/results", async (c) => {
   }
 });
 
+search.get("/api", async (c) => {
+  const q = c.req.query("q")?.trim();
+  const offset = parseInt(c.req.query("offset") ?? "0", 10);
+
+  if (!q || q.length < 2) {
+    return c.json([]);
+  }
+
+  try {
+    const albums = await searchReleaseGroups(q, 10, offset);
+    return c.json(albums);
+  } catch {
+    return c.json({ error: "Search failed" }, 500);
+  }
+});
+
 export default search;

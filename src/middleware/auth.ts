@@ -2,6 +2,7 @@ import { createMiddleware } from "hono/factory";
 import { getCookie } from "hono/cookie";
 import { prisma } from "../db/client.js";
 
+// athugar hvort notandi sé innskráður
 export const authMiddleware = createMiddleware<{
   Variables: {
     userId: string | null;

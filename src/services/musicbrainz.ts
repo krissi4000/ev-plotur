@@ -10,12 +10,14 @@ export interface MBReleaseGroup {
   releaseYear: number | null;
   genre: string | null;
   coverArtUrl: string | null;
+  score: number;
 }
 
 interface MBSearchResult {
   "release-groups": Array<{
     id: string;
     title: string;
+    score: number;
     "first-release-date"?: string;
     "artist-credit": Array<{
       artist: { id: string; name: string };
@@ -24,8 +26,9 @@ interface MBSearchResult {
   }>;
 }
 
-export async function searchReleaseGroups(query: string, limit = 25): Promise<MBReleaseGroup[]> {
-  const url = `${MB_BASE}/release-group?query=${encodeURIComponent(query)}&type=album&fmt=json&limit=${limit}`;
+// sækir plötur frá musicbrainz eftir leitarstreng
+export async function searchReleaseGroups(query: string, limit = 10, offset = 0): Promise<MBReleaseGroup[]> {
+  const url = `${MB_BASE}/release-group?query=${encodeURIComponent(query)}&type=album&fmt=json&limit=${limit}&offset=${offset}`;
 
   const res = await fetch(url, {
     headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
@@ -50,6 +53,7 @@ export async function searchReleaseGroups(query: string, limit = 25): Promise<MB
       releaseYear: isNaN(year!) ? null : year,
       genre: topTag,
       coverArtUrl: `${CAA_BASE}/release-group/${rg.id}/front-250`,
+      score: rg.score,
     };
   });
 }

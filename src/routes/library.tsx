@@ -9,6 +9,100 @@ const library = new Hono<{
 
 library.use("*", requireAuth);
 
+// skilar öllum plötum notandans úr gagnagrunni
+// GET /library/api — JSON list of library entries
+library.get("/api", async (c) => {
+  const userId = c.get("userId")!;
+  const entries = await prisma.libraryEntry.findMany({
+    where: { userId },
+    include: { album: true },
+    orderBy: { addedAt: "desc" },
+  });
+  return c.json(entries);
+});
+
+// GET /library/api/:entryId — JSON single entry
+library.get("/api/:entryId", async (c) => {
+  const userId = c.get("userId")!;
+  const { entryId } = c.req.param();
+  const entry = await prisma.libraryEntry.findFirst({
+    where: { id: entryId, userId },
+    include: { album: true },
+  });
+  if (!entry) return c.json({ error: "Not found" }, 404);
+  return c.json(entry);
+});
+
+// POST /library/api/add — JSON add album to library
+library.post("/api/add", async (c) => {
+  const userId = c.get("userId")!;
+  const body = await c.req.json<{
+    mbid: string;
+    title: string;
+    artist: string;
+    artistMbid?: string;
+    releaseYear?: number | null;
+    genre?: string | null;
+    coverArtUrl?: string | null;
+    status?: string;
+  }>();
+
+  const album = await prisma.album.upsert({
+    where: { mbid: body.mbid },
+    create: {
+      mbid: body.mbid,
+      title: body.title,
+      artist: body.artist,
+      artistMbid: body.artistMbid || null,
+      releaseYear: body.releaseYear ?? null,
+      genre: body.genre || null,
+      coverArtUrl: body.coverArtUrl || null,
+    },
+    update: {},
+  });
+
+  const status = body.status === "UNLISTENED" ? "UNLISTENED" : "LISTENED";
+
+  const entry = await prisma.libraryEntry.upsert({
+    where: { userId_albumId: { userId, albumId: album.id } },
+    create: { userId, albumId: album.id, status },
+    update: { status },
+  });
+
+  return c.json({ entryId: entry.id });
+});
+
+// POST /library/api/:entryId/update — JSON update entry
+library.post("/api/:entryId/update", async (c) => {
+  const userId = c.get("userId")!;
+  const { entryId } = c.req.param();
+  const body = await c.req.json<{ status: string; rating: number | null; review: string }>();
+
+  const entry = await prisma.libraryEntry.findFirst({ where: { id: entryId, userId } });
+  if (!entry) return c.json({ error: "Not found" }, 404);
+
+  await prisma.libraryEntry.update({
+    where: { id: entryId },
+    data: {
+      status: body.status === "UNLISTENED" ? "UNLISTENED" : "LISTENED",
+      rating: body.rating !== null && body.rating >= 1 && body.rating <= 10 ? body.rating : null,
+      review: body.review?.trim() || null,
+    },
+  });
+
+  return c.json({ ok: true });
+});
+
+// POST /library/api/:entryId/delete — JSON delete entry
+library.post("/api/:entryId/delete", async (c) => {
+  const userId = c.get("userId")!;
+  const { entryId } = c.req.param();
+
+  await prisma.libraryEntry.deleteMany({ where: { id: entryId, userId } });
+
+  return c.json({ ok: true });
+});
+
 // GET /library — library overview with sorting and stats
 library.get("/", async (c) => {
   const userId = c.get("userId")!;

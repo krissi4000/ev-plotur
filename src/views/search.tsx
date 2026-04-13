@@ -44,6 +44,7 @@ export function SearchResults({ albums, query }: { albums: MBReleaseGroup[]; que
           <strong>{album.title}</strong> — {album.artist}
           {album.releaseYear ? ` (${album.releaseYear})` : ""}
           {album.genre ? ` · ${album.genre}` : ""}
+          {` · ${album.score}% match`}
           <form method="post" action="/library/add" style="display:inline">
             <input type="hidden" name="mbid" value={album.id} />
             <input type="hidden" name="title" value={album.title} />
