@@ -10,8 +10,8 @@
     "client:build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "npm run client:build && prisma generate && prisma migrate deploy && tsc",
-    "start": "node dist/index.js",
+    "build": "npm run client:build && prisma generate && tsc",
+    "start": "prisma migrate deploy && node dist/index.js",
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
