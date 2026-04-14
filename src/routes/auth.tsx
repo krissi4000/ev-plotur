@@ -40,8 +40,48 @@ function setSessionCookie(c: any, sessionId: string) {
 
 const auth = new Hono();
 
-// --- Register ---
-auth.get("/register", (c) => c.html(<RegisterPage />));
+// --- Current user ---
+auth.get("/me", (c) => {
+  const userId = c.get("userId");
+  const username = c.get("username");
+  if (!userId) return c.json({ error: "Not authenticated" }, 401);
+  return c.json({ userId, username });
+});
+
+// --- JSON API ---
+auth.post("/api/login", async (c) => {
+  const { username, password } = await c.req.json<{ username: string; password: string }>();
+  const user = await prisma.user.findUnique({ where: { username } });
+  if (!user || !user.passwordHash) return c.json({ error: "Invalid credentials" }, 401);
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) return c.json({ error: "Invalid credentials" }, 401);
+  const sessionId = await createSession(user.id);
+  setSessionCookie(c, sessionId);
+  return c.json({ ok: true });
+});
+
+auth.post("/api/register", async (c) => {
+  const { username, email, password } = await c.req.json<{ username: string; email?: string; password: string }>();
+  if (!username || !password) return c.json({ error: "Username and password required" }, 400);
+  const existing = await prisma.user.findFirst({
+    where: { OR: [{ username }, ...(email ? [{ email }] : [])] },
+  });
+  if (existing) return c.json({ error: "Username or email already taken" }, 400);
+  const passwordHash = await bcrypt.hash(password, 12);
+  const user = await prisma.user.create({ data: { username, email: email || null, passwordHash } });
+  const sessionId = await createSession(user.id);
+  setSessionCookie(c, sessionId);
+  return c.json({ ok: true });
+});
+
+auth.post("/api/logout", async (c) => {
+  const sessionId = getCookie(c, "session");
+  if (sessionId) {
+    await prisma.session.delete({ where: { id: sessionId } }).catch(() => {});
+    deleteCookie(c, "session");
+  }
+  return c.json({ ok: true });
+});
 
 auth.post("/register", async (c) => {
   const { username, email, password } = await c.req.parseBody<{
@@ -70,9 +110,6 @@ auth.post("/register", async (c) => {
   setSessionCookie(c, sessionId);
   return c.redirect("/");
 });
-
-// --- Login ---
-auth.get("/login", (c) => c.html(<LoginPage />));
 
 auth.post("/login", async (c) => {
   const { username, password } = await c.req.parseBody<{

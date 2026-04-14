@@ -4,8 +4,8 @@ export default function HomePage() {
   return (
     <div>
       <Navbar />
-      <h1>Music Library</h1>
-      <p>Welcome! Search for albums or browse your library.</p>
+      <h1>Tónlistarsafn</h1>
+      <p>Velkomin! Leitaðu að plötum eða skoðaðu safnið þitt.</p>
     </div>
   );
 }

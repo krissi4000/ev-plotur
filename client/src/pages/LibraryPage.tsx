@@ -20,13 +20,13 @@ type Entry = {
 };
 
 const SORT_OPTIONS = [
-  { value: "addedAt", label: "Date Added" },
-  { value: "rating", label: "Rating" },
-  { value: "title", label: "Title" },
-  { value: "artist", label: "Artist" },
-  { value: "releaseYear", label: "Release Year" },
-  { value: "genre", label: "Genre" },
-  { value: "status", label: "Status" },
+  { value: "addedAt", label: "Dagsetning" },
+  { value: "rating", label: "Einkunn" },
+  { value: "title", label: "Titill" },
+  { value: "artist", label: "Listamaður" },
+  { value: "releaseYear", label: "Útgáfuár" },
+  { value: "genre", label: "Tegund" },
+  { value: "status", label: "Staða" },
 ];
 
 function sortEntries(entries: Entry[], sort: string): Entry[] {
@@ -66,21 +66,21 @@ export default function LibraryPage() {
   return (
     <div>
       <Navbar />
-      <h1>My Library</h1>
+      <h1>Mitt safn</h1>
       {loading ? (
-        <p>Loading...</p>
+        <p>Hleð...</p>
       ) : (
         <>
           <section>
             <p>
-              Total: {entries.length} · Listened: {listened.length} · To-Listen: {toListenCount}
+              Samtals: {entries.length} · Hlustað: {listened.length} · Á að hlusta: {toListenCount}
             </p>
-            {avgRating && <p>Average rating: {avgRating} / 10</p>}
+            {avgRating && <p>Meðaleinkunn: {avgRating} / 10</p>}
           </section>
 
           <div>
             <label>
-              Sort by:{" "}
+              Raða eftir:{" "}
               <select value={sort} onChange={(e) => setSort(e.target.value)}>
                 {SORT_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -92,7 +92,7 @@ export default function LibraryPage() {
           </div>
 
           {sorted.length === 0 ? (
-            <p>No albums yet. <Link to="/search">Search for albums</Link> to add some.</p>
+            <p>Engar plötur enn. <Link to="/search">Leitaðu að plötum</Link> til að bæta við.</p>
           ) : (
             <ul>
               {sorted.map((entry) => (
@@ -116,8 +116,8 @@ export default function LibraryPage() {
                   {entry.status === "LISTENED"
                     ? entry.rating
                       ? `★ ${entry.rating}/10`
-                      : "Listened"
-                    : "To-Listen"}
+                      : "Hlustað"
+                    : "Á að hlusta"}
                 </li>
               ))}
             </ul>

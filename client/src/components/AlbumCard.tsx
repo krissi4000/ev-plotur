@@ -17,7 +17,7 @@ export default function AlbumCard({ album }: { album: Album }) {
       <strong>{album.title}</strong> — {album.artist}
       {album.releaseYear ? ` (${album.releaseYear})` : ""}
       {album.genre ? ` · ${album.genre}` : ""}
-      {album.score !== undefined ? ` · ${album.score}% match` : ""}
+      {album.score !== undefined ? ` · ${album.score}% samsvörun` : ""}
     </div>
   );
 }

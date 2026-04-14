@@ -57,18 +57,18 @@ export default function LibraryEntryPage() {
   }
 
   async function handleDelete() {
-    if (!confirm("Remove from library?")) return;
+    if (!confirm("Fjarlægja plötu úr safni?")) return;
     await fetch(`/library/api/${entryId}/delete`, { method: "POST" });
     navigate("/library");
   }
 
-  if (loading) return <div><Navbar /><p>Loading...</p></div>;
-  if (!entry) return <div><Navbar /><p>Not found.</p></div>;
+  if (loading) return <div><Navbar /><p>Hleð...</p></div>;
+  if (!entry) return <div><Navbar /><p>Fannst ekki.</p></div>;
 
   return (
     <div>
       <Navbar />
-      <p><Link to="/library">← Back to library</Link></p>
+      <p><Link to="/library">← Til baka í safn</Link></p>
 
       <div>
         {entry.album.coverArtUrl && (
@@ -90,49 +90,49 @@ export default function LibraryEntryPage() {
       <form onSubmit={handleUpdate}>
         <div>
           <label>
-            Status:{" "}
+            Staða:{" "}
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="LISTENED">Listened</option>
-              <option value="UNLISTENED">To-Listen</option>
+              <option value="LISTENED">Hlustað</option>
+              <option value="UNLISTENED">Á að hlusta</option>
             </select>
           </label>
         </div>
 
         <div>
           <label>
-            Rating (1–10):{" "}
+            Einkunn (1–10):{" "}
             <input
               type="number"
               min={1}
               max={10}
               value={rating}
               onChange={(e) => setRating(e.target.value)}
-              placeholder="No rating"
+              placeholder="Engin einkunn"
             />
           </label>
         </div>
 
         <div>
           <label>
-            Review:
+            Umsögn:
             <br />
             <textarea
               value={review}
               onChange={(e) => setReview(e.target.value)}
               rows={5}
               cols={40}
-              placeholder="Write something about this album..."
+              placeholder="Skrifaðu eitthvað um þessa plötu..."
             />
           </label>
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? "Vistandi..." : "Vista"}
         </button>
       </form>
 
       <div style={{ marginTop: "1rem" }}>
-        <button onClick={handleDelete}>Remove from library</button>
+        <button onClick={handleDelete}>Fjarlægja úr safni</button>
       </div>
     </div>
   );

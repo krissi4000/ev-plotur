@@ -84,27 +84,27 @@ export default function SearchPage() {
   return (
     <div>
       <Navbar />
-      <h1>Search Albums</h1>
+      <h1>Leita að plötum</h1>
       <input
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search for an album..."
+        placeholder="Leita að plötu..."
       />
-      {loading && <span> Searching...</span>}
+      {loading && <span> Leita...</span>}
       <div>
         {results.map((album) => (
           <div key={album.id}>
             <AlbumCard album={album} />
             {added[album.id] ? (
               <span>
-                {added[album.id] === "LISTENED" ? "Added to library" : "Added to to-listen list"}
+                {added[album.id] === "LISTENED" ? "Bætt í safn" : "Bætt á hlustunarlista"}
               </span>
             ) : (
               <>
-                <button onClick={() => addToLibrary(album, "LISTENED")}>+ Add to library</button>
+                <button onClick={() => addToLibrary(album, "LISTENED")}>+ Bæta í safn</button>
                 {" "}
-                <button onClick={() => addToLibrary(album, "UNLISTENED")}>+ To-Listen</button>
+                <button onClick={() => addToLibrary(album, "UNLISTENED")}>+ Á að hlusta</button>
               </>
             )}
           </div>
@@ -112,7 +112,7 @@ export default function SearchPage() {
       </div>
       {results.length > 0 && (
         <button onClick={loadMore} disabled={loadingMore}>
-          {loadingMore ? "Loading..." : "Show more"}
+          {loadingMore ? "Hleð..." : "Sjá fleiri"}
         </button>
       )}
     </div>
