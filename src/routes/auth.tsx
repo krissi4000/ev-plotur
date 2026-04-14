@@ -38,7 +38,8 @@ function setSessionCookie(c: any, sessionId: string) {
   });
 }
 
-const auth = new Hono();
+type Variables = { userId: string | null; username: string | null };
+const auth = new Hono<{ Variables: Variables }>();
 
 // --- Current user ---
 auth.get("/me", (c) => {
