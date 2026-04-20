@@ -1,6 +1,17 @@
 const MB_BASE = "https://musicbrainz.org/ws/2";
 const CAA_BASE = "https://coverartarchive.org";
-const USER_AGENT = "tónlistar-letterboxd/0.1 (https://github.com/placeholder)";
+const USER_AGENT = "tonlistar-letterboxd/0.1 (https://github.com/krissi4000/ev-plotur)";
+
+let lastRequestTime = 0;
+
+async function mbFetch(url: string): Promise<Response> {
+  const elapsed = Date.now() - lastRequestTime;
+  if (elapsed < 2000) {
+    await new Promise((r) => setTimeout(r, 2000 - elapsed));
+  }
+  lastRequestTime = Date.now();
+  return fetch(url, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } });
+}
 
 export interface MBReleaseGroup {
   id: string;
@@ -30,9 +41,7 @@ interface MBSearchResult {
 export async function searchReleaseGroups(query: string, limit = 10, offset = 0): Promise<MBReleaseGroup[]> {
   const url = `${MB_BASE}/release-group?query=${encodeURIComponent(query)}&type=album&fmt=json&limit=${limit}&offset=${offset}`;
 
-  const res = await fetch(url, {
-    headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
-  });
+  const res = await mbFetch(url);
 
   if (!res.ok) throw new Error(`MusicBrainz API error: ${res.status}`);
 

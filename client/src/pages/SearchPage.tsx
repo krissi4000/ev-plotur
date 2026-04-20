@@ -92,9 +92,9 @@ export default function SearchPage() {
         placeholder="Leita að plötu..."
       />
       {loading && <span> Leita...</span>}
-      <div>
+      <div className="flex flex-wrap gap-4">
         {results.map((album) => (
-          <div key={album.id}>
+          <div key={album.id} className="w-44 flex flex-col gap-2">
             <AlbumCard album={album} />
             {added[album.id] ? (
               <span>
@@ -104,7 +104,7 @@ export default function SearchPage() {
               <>
                 <button onClick={() => addToLibrary(album, "LISTENED")}>+ Bæta í safn</button>
                 {" "}
-                <button onClick={() => addToLibrary(album, "UNLISTENED")}>+ Á að hlusta</button>
+                <button onClick={() => addToLibrary(album, "UNLISTENED")}>+ Bæta á lista</button>
               </>
             )}
           </div>

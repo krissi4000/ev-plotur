@@ -5,7 +5,7 @@ import { GitHub, Google, generateState, generateCodeVerifier } from "arctic";
 import { prisma } from "../db/client.js";
 import { LoginPage, RegisterPage, ErrorMessage } from "../views/auth.js";
 
-const SESSION_DURATION_DAYS = 30;
+const SESSION_DURATION_MINUTES = 30;
 
 const github = new GitHub(
   process.env.GITHUB_CLIENT_ID!,
@@ -21,7 +21,7 @@ const google = new Google(
 
 async function createSession(userId: string): Promise<string> {
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + SESSION_DURATION_DAYS);
+  expiresAt.setMinutes(expiresAt.getMinutes() + SESSION_DURATION_MINUTES);
   const session = await prisma.session.create({
     data: { userId, expiresAt },
   });
@@ -34,7 +34,7 @@ function setSessionCookie(c: any, sessionId: string) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "Lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * SESSION_DURATION_DAYS,
+    maxAge: 60 * SESSION_DURATION_MINUTES,
   });
 }
 
