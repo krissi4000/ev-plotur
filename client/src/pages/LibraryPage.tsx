@@ -35,66 +35,86 @@ export default function LibraryPage() {
     : null;
 
   return (
-    <div>
+    <div className="min-h-screen">
       <Navbar />
-      <h1>Mitt safn</h1>
-      {loading ? (
-        <p>Hleð...</p>
-      ) : (
-        <>
-          <section>
-            <p>
-              Samtals: {entries.length} · Hlustað: {listened.length} · Á að hlusta: {toListenCount}
-            </p>
-            {avgRating && <p>Meðaleinkunn: {avgRating} / 10</p>}
-          </section>
+      <div className="max-w-4xl mx-auto px-6">
+        <h1 className="text-2xl font-bold text-zinc-100 mb-4">Mitt safn</h1>
+        {loading ? (
+          <p className="text-zinc-500">Hleð...</p>
+        ) : (
+          <>
+            <section className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-400 mb-4">
+              <span>Samtals: {entries.length}</span>
+              <span>Hlustað: {listened.length}</span>
+              <span>Á að hlusta: {toListenCount}</span>
+              {avgRating && <span>Meðaleinkunn: {avgRating}/10</span>}
+            </section>
 
-          <div>
-            <label>
-              Raða eftir:{" "}
-              <select value={sort} onChange={(e) => setSort(e.target.value)}>
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+            <div className="mb-6">
+              <label className="text-sm text-zinc-400">
+                Raða eftir:{" "}
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
-          {sorted.length === 0 ? (
-            <p>Engar plötur enn. <Link to="/search">Leitaðu að plötum</Link> til að bæta við.</p>
-          ) : (
-            <ul>
-              {sorted.map((entry) => (
-                <li key={entry.id}>
-                  {entry.album.coverArtUrl && (
-                    <img
-                      src={entry.album.coverArtUrl}
-                      alt=""
-                      width={50}
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                  )}
-                  <Link to={`/library/${entry.id}`}>
-                    <strong>{entry.album.title}</strong>
+            {sorted.length === 0 ? (
+              <p className="text-zinc-500">
+                Engar plötur enn.{" "}
+                <Link to="/search" className="text-zinc-300 hover:text-zinc-100 underline">
+                  Leitaðu að plötum
+                </Link>{" "}
+                til að bæta við.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {sorted.map((entry) => (
+                  <Link
+                    key={entry.id}
+                    to={`/library/${entry.id}`}
+                    className="flex items-center gap-4 bg-zinc-900 border border-zinc-800 rounded-xl p-3 hover:border-zinc-700"
+                  >
+                    {entry.album.coverArtUrl ? (
+                      <img
+                        src={entry.album.coverArtUrl}
+                        alt=""
+                        className="w-12 h-12 rounded-lg object-cover shrink-0"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-zinc-800 shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-zinc-100 font-medium truncate">{entry.album.title}</div>
+                      <div className="text-zinc-400 text-sm truncate">
+                        {entry.album.artist}
+                        {entry.album.releaseYear ? ` · ${entry.album.releaseYear}` : ""}
+                        {entry.album.genres.length > 0 ? ` · ${entry.album.genres.join(", ")}` : ""}
+                      </div>
+                    </div>
+                    <span className="text-zinc-500 text-sm shrink-0">
+                      {entry.status === "LISTENED"
+                        ? entry.rating
+                          ? `${entry.rating}/10`
+                          : "Hlustað"
+                        : "Á að hlusta"}
+                    </span>
                   </Link>
-                  {" — "}
-                  {entry.album.artist}
-                  {entry.album.releaseYear ? ` (${entry.album.releaseYear})` : ""}
-                  {entry.album.genre ? ` · ${entry.album.genre}` : ""}
-                  {" · "}
-                  {entry.status === "LISTENED"
-                    ? entry.rating
-                      ? `★ ${entry.rating}/10`
-                      : "Hlustað"
-                    : "Á að hlusta"}
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

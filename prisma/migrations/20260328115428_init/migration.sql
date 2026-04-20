@@ -39,12 +39,11 @@ CREATE TABLE "Session" (
 -- CreateTable
 CREATE TABLE "Album" (
     "id" TEXT NOT NULL,
-    "mbid" TEXT NOT NULL,
+    "lastfmKey" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "artist" TEXT NOT NULL,
-    "artistMbid" TEXT,
     "releaseYear" INTEGER,
-    "genre" TEXT,
+    "genres" TEXT[],
     "coverArtUrl" TEXT,
     "cachedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -75,7 +74,7 @@ CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 CREATE UNIQUE INDEX "OAuthAccount_provider_providerAccountId_key" ON "OAuthAccount"("provider", "providerAccountId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Album_mbid_key" ON "Album"("mbid");
+CREATE UNIQUE INDEX "Album_lastfmKey_key" ON "Album"("lastfmKey");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "LibraryEntry_userId_albumId_key" ON "LibraryEntry"("userId", "albumId");

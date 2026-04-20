@@ -44,9 +44,9 @@ export default function AlbumCard({ album }: { album: Album }) {
       <div className="flex flex-col gap-1 p-4">
         <span className="text-zinc-100 font-semibold leading-tight">{album.title}</span>
         <span className="text-zinc-400 text-sm">{album.artist}</span>
-        {(album.releaseYear || album.genre) && (
+        {(album.releaseYear || album.genres.length > 0) && (
           <span className="text-zinc-500 text-xs">
-            {[album.releaseYear, album.genre].filter(Boolean).join(" · ")}
+            {[album.releaseYear, ...album.genres].filter(Boolean).join(" · ")}
           </span>
         )}
       </div>

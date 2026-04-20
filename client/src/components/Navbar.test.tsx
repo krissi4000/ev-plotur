@@ -18,7 +18,7 @@ describe("Navbar", () => {
         <Navbar />
       </MemoryRouter>
     );
-    expect(screen.getByText("Heim")).toBeInTheDocument();
+    expect(screen.getByText("Plata")).toBeInTheDocument();
     expect(screen.getByText("Leita")).toBeInTheDocument();
     expect(screen.getByText("Safn")).toBeInTheDocument();
   });
@@ -29,7 +29,7 @@ describe("Navbar", () => {
         <Navbar />
       </MemoryRouter>
     );
-    expect(screen.getByText("Heim").closest("a")).toHaveAttribute("href", "/");
+    expect(screen.getByText("Plata").closest("a")).toHaveAttribute("href", "/");
     expect(screen.getByText("Leita").closest("a")).toHaveAttribute("href", "/search");
     expect(screen.getByText("Safn").closest("a")).toHaveAttribute("href", "/library");
   });

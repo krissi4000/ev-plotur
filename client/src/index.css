@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Karrik";
+  src: url("./fonts/Karrik-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Karrik";
+  src: url("./fonts/Karrik-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 body {
   @apply bg-zinc-950 text-zinc-100;
+  font-family: "Karrik", system-ui, sans-serif;
 }

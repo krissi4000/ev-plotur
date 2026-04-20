@@ -40,15 +40,14 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Cached MusicBrainz release group data
+// Cached Last.fm album data
 model Album {
   id           String   @id @default(cuid())
-  mbid         String   @unique  // MusicBrainz release group ID
+  lastfmKey    String   @unique  // "artist:albumname" compound key (lowercased)
   title        String
   artist       String
-  artistMbid   String?
   releaseYear  Int?
-  genre        String?
+  genres       String[] // up to 4 Last.fm tags with count >= 50
   coverArtUrl  String?
   cachedAt     DateTime @default(now())
 

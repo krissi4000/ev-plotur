@@ -1,4 +1,4 @@
-import type { MBReleaseGroup } from "../services/musicbrainz.js";
+import type { LastfmAlbum } from "../services/lastfm.js";
 
 export function SearchPage() {
   return (
@@ -26,7 +26,7 @@ export function SearchPage() {
   );
 }
 
-export function SearchResults({ albums, query }: { albums: MBReleaseGroup[]; query: string }) {
+export function SearchResults({ albums, query }: { albums: LastfmAlbum[]; query: string }) {
   if (albums.length === 0) {
     return <p>No results for "{query}".</p>;
   }
@@ -34,7 +34,7 @@ export function SearchResults({ albums, query }: { albums: MBReleaseGroup[]; que
   return (
     <ul>
       {albums.map((album) => (
-        <li key={album.id}>
+        <li key={album.lastfmKey}>
           <img
             src={album.coverArtUrl ?? ""}
             alt=""
@@ -43,26 +43,23 @@ export function SearchResults({ albums, query }: { albums: MBReleaseGroup[]; que
           />
           <strong>{album.title}</strong> — {album.artist}
           {album.releaseYear ? ` (${album.releaseYear})` : ""}
-          {album.genre ? ` · ${album.genre}` : ""}
-          {` · ${album.score}% match`}
+          {album.genres.length > 0 ? ` · ${album.genres.join(", ")}` : ""}
           <form method="post" action="/library/add" style="display:inline">
-            <input type="hidden" name="mbid" value={album.id} />
+            <input type="hidden" name="lastfmKey" value={album.lastfmKey} />
             <input type="hidden" name="title" value={album.title} />
             <input type="hidden" name="artist" value={album.artist} />
-            <input type="hidden" name="artistMbid" value={album.artistMbid ?? ""} />
             <input type="hidden" name="releaseYear" value={String(album.releaseYear ?? "")} />
-            <input type="hidden" name="genre" value={album.genre ?? ""} />
+            <input type="hidden" name="genres" value={album.genres.join(",")} />
             <input type="hidden" name="coverArtUrl" value={album.coverArtUrl ?? ""} />
             <input type="hidden" name="status" value="LISTENED" />
             <button type="submit">+ Add to library</button>
           </form>
           <form method="post" action="/library/add" style="display:inline">
-            <input type="hidden" name="mbid" value={album.id} />
+            <input type="hidden" name="lastfmKey" value={album.lastfmKey} />
             <input type="hidden" name="title" value={album.title} />
             <input type="hidden" name="artist" value={album.artist} />
-            <input type="hidden" name="artistMbid" value={album.artistMbid ?? ""} />
             <input type="hidden" name="releaseYear" value={String(album.releaseYear ?? "")} />
-            <input type="hidden" name="genre" value={album.genre ?? ""} />
+            <input type="hidden" name="genres" value={album.genres.join(",")} />
             <input type="hidden" name="coverArtUrl" value={album.coverArtUrl ?? ""} />
             <input type="hidden" name="status" value="UNLISTENED" />
             <button type="submit">+ To-Listen</button>

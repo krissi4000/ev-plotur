@@ -31,43 +31,48 @@ export default function RegisterPage() {
   }
 
   return (
-    <div>
-      <h1>Nýskráning</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-zinc-100 mb-6 text-center">Nýskráning</h1>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Notendanafn"
             required
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
           />
-        </div>
-        <div>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Netfang (valfrjálst)"
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
           />
-        </div>
-        <div>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Lykilorð"
             required
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
           />
-        </div>
-        {error && <p>{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? "Nýskrái..." : "Nýskrá"}
-        </button>
-      </form>
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-zinc-100 text-zinc-900 font-medium rounded-lg py-2 hover:bg-white disabled:opacity-50"
+          >
+            {loading ? "Nýskrái..." : "Nýskrá"}
+          </button>
+        </form>
 
-      <p>
-        <Link to="/auth/login">Ertu nú þegar með aðgang?</Link>
-      </p>
+        <p className="text-center mt-6">
+          <Link to="/auth/login" className="text-zinc-400 hover:text-zinc-100 text-sm">
+            Ertu nú þegar með aðgang?
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

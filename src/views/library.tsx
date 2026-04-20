@@ -2,7 +2,7 @@ type Album = {
   title: string;
   artist: string;
   releaseYear: number | null;
-  genre: string | null;
+  genres: string[];
   coverArtUrl: string | null;
 };
 
@@ -98,7 +98,7 @@ export function LibraryPage({
               {" — "}
               {entry.album.artist}
               {entry.album.releaseYear ? ` (${entry.album.releaseYear})` : ""}
-              {entry.album.genre ? ` · ${entry.album.genre}` : ""}
+              {entry.album.genres.length > 0 ? ` · ${entry.album.genres.join(", ")}` : ""}
               {" · "}
               {entry.status === "LISTENED"
                 ? entry.rating ? `★ ${entry.rating}/10` : "Listened"
@@ -130,7 +130,7 @@ export function AlbumDetailPage({ entry, entryId }: { entry: Entry & { review: s
           <p>
             {entry.album.artist}
             {entry.album.releaseYear ? ` · ${entry.album.releaseYear}` : ""}
-            {entry.album.genre ? ` · ${entry.album.genre}` : ""}
+            {entry.album.genres.length > 0 ? ` · ${entry.album.genres.join(", ")}` : ""}
           </p>
         </div>
 

@@ -4,11 +4,10 @@ import { describe, it, expect } from "vitest";
 import AlbumCard from "./AlbumCard";
 
 const album = {
-  id: "1",
   title: "OK Computer",
   artist: "Radiohead",
   releaseYear: 1997,
-  genre: "rock",
+  genres: ["alternative rock", "rock"],
   coverArtUrl: "https://example.com/cover.jpg",
 };
 

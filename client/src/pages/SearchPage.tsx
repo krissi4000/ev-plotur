@@ -3,12 +3,10 @@ import Navbar from "../components/Navbar";
 import AlbumCard from "../components/AlbumCard";
 import type { SearchAlbum } from "../types";
 
-const PAGE_SIZE = 10;
-
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchAlbum[]>([]);
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [added, setAdded] = useState<Record<string, string>>({});
@@ -16,17 +14,17 @@ export default function SearchPage() {
   useEffect(() => {
     if (query.length < 2) {
       setResults([]);
-      setOffset(0);
+      setPage(1);
       return;
     }
 
     const timeout = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/search/api?q=${encodeURIComponent(query)}&offset=0`);
+        const res = await fetch(`/search/api?q=${encodeURIComponent(query)}&page=1`);
         const data = await res.json();
         setResults(data);
-        setOffset(PAGE_SIZE);
+        setPage(2);
       } catch {
         setResults([]);
       } finally {
@@ -37,14 +35,13 @@ export default function SearchPage() {
     return () => clearTimeout(timeout);
   }, [query]);
 
-  // sækir fleiri niðurstöður með offset
   async function loadMore() {
     setLoadingMore(true);
     try {
-      const res = await fetch(`/search/api?q=${encodeURIComponent(query)}&offset=${offset}`);
+      const res = await fetch(`/search/api?q=${encodeURIComponent(query)}&page=${page}`);
       const data: SearchAlbum[] = await res.json();
       setResults((prev) => [...prev, ...data]);
-      setOffset((prev) => prev + PAGE_SIZE);
+      setPage((prev) => prev + 1);
     } finally {
       setLoadingMore(false);
     }
@@ -55,56 +52,75 @@ export default function SearchPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        mbid: album.id,
+        lastfmKey: album.lastfmKey,
         title: album.title,
         artist: album.artist,
-        artistMbid: album.artistMbid,
         releaseYear: album.releaseYear,
-        genre: album.genre,
+        genres: album.genres,
         coverArtUrl: album.coverArtUrl,
         status,
       }),
     });
     const data = await res.json();
     if (data.entryId) {
-      setAdded((prev) => ({ ...prev, [album.id]: status }));
+      setAdded((prev) => ({ ...prev, [album.lastfmKey]: status }));
     }
   }
 
   return (
-    <div>
+    <div className="min-h-screen">
       <Navbar />
-      <h1>Leita að plötum</h1>
-      <input
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Leita að plötu..."
-      />
-      {loading && <span> Leita...</span>}
-      <div className="flex flex-wrap gap-4">
-        {results.map((album) => (
-          <div key={album.id} className="w-44 flex flex-col gap-2">
-            <AlbumCard album={album} />
-            {added[album.id] ? (
-              <span>
-                {added[album.id] === "LISTENED" ? "Bætt í safn" : "Bætt á hlustunarlista"}
-              </span>
-            ) : (
-              <>
-                <button onClick={() => addToLibrary(album, "LISTENED")}>+ Bæta í safn</button>
-                {" "}
-                <button onClick={() => addToLibrary(album, "UNLISTENED")}>+ Bæta á lista</button>
-              </>
-            )}
+      <div className="max-w-4xl mx-auto px-6">
+        <h1 className="text-2xl font-bold text-zinc-100 mb-4">Leita að plötum</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Leita að plötu..."
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+          />
+          {loading && <span className="text-zinc-500 text-sm shrink-0">Leita...</span>}
+        </div>
+        <div className="flex flex-wrap gap-4">
+          {results.map((album) => (
+            <div key={album.lastfmKey} className="w-44 flex flex-col gap-2">
+              <AlbumCard album={album} />
+              {added[album.lastfmKey] ? (
+                <span className="text-zinc-500 text-xs text-center">
+                  {added[album.lastfmKey] === "LISTENED" ? "Bætt í safn" : "Bætt á hlustunarlista"}
+                </span>
+              ) : (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => addToLibrary(album, "LISTENED")}
+                    className="flex-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-1.5"
+                  >
+                    + Safn
+                  </button>
+                  <button
+                    onClick={() => addToLibrary(album, "UNLISTENED")}
+                    className="flex-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-1.5"
+                  >
+                    + Listi
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        {results.length > 0 && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 rounded-lg px-6 py-2 text-sm"
+            >
+              {loadingMore ? "Hleð..." : "Sjá fleiri"}
+            </button>
           </div>
-        ))}
+        )}
       </div>
-      {results.length > 0 && (
-        <button onClick={loadMore} disabled={loadingMore}>
-          {loadingMore ? "Hleð..." : "Sjá fleiri"}
-        </button>
-      )}
     </div>
   );
 }

@@ -30,41 +30,56 @@ export default function LoginPage() {
   }
 
   return (
-    <div>
-      <h1>Innskráning</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-zinc-100 mb-6 text-center">Innskráning</h1>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Notendanafn"
             required
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
           />
-        </div>
-        <div>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Lykilorð"
             required
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
           />
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-zinc-100 text-zinc-900 font-medium rounded-lg py-2 hover:bg-white disabled:opacity-50"
+          >
+            {loading ? "Skrái inn..." : "Innskrá"}
+          </button>
+        </form>
+
+        <div className="flex flex-col gap-2 mt-6">
+          <a
+            href="/auth/github"
+            className="block text-center bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-2 text-sm"
+          >
+            Innskrá með GitHub
+          </a>
+          <a
+            href="/auth/google"
+            className="block text-center bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-2 text-sm"
+          >
+            Innskrá með Google
+          </a>
         </div>
-        {error && <p>{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? "Skrái inn..." : "Innskrá"}
-        </button>
-      </form>
 
-      <div>
-        <a href="/auth/github">Innskrá með GitHub</a>
-        <br />
-        <a href="/auth/google">Innskrá með Google</a>
+        <p className="text-center mt-6">
+          <Link to="/auth/register" className="text-zinc-400 hover:text-zinc-100 text-sm">
+            Búa til aðgang
+          </Link>
+        </p>
       </div>
-
-      <p>
-        <Link to="/auth/register">Búa til aðgang</Link>
-      </p>
     </div>
   );
 }

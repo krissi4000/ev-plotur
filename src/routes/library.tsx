@@ -10,12 +10,11 @@ const library = new Hono<{ Variables: AppVariables }>();
 library.use("*", requireAuth);
 
 interface AlbumInput {
-  mbid: string;
+  lastfmKey: string;
   title: string;
   artist: string;
-  artistMbid?: string | null;
   releaseYear?: number | string | null;
-  genre?: string | null;
+  genres?: string[];
   coverArtUrl?: string | null;
   status?: string;
 }
@@ -27,22 +26,20 @@ async function addAlbumToLibrary(userId: string, data: AlbumInput) {
   const validYear = typeof releaseYear === "number" && !isNaN(releaseYear) ? releaseYear : null;
 
   const album = await prisma.album.upsert({
-    where: { mbid: data.mbid },
+    where: { lastfmKey: data.lastfmKey },
     create: {
-      mbid: data.mbid,
+      lastfmKey: data.lastfmKey,
       title: data.title,
       artist: data.artist,
-      artistMbid: data.artistMbid || null,
       releaseYear: validYear,
-      genre: data.genre || null,
+      genres: data.genres ?? [],
       coverArtUrl: data.coverArtUrl || null,
     },
     update: {
       title: data.title,
       artist: data.artist,
-      artistMbid: data.artistMbid || null,
       releaseYear: validYear,
-      genre: data.genre || null,
+      genres: data.genres ?? [],
       coverArtUrl: data.coverArtUrl || null,
     },
   });
@@ -84,7 +81,7 @@ library.get("/api/:entryId", async (c) => {
 library.post("/api/add", async (c) => {
   const userId = c.get("userId")!;
   const body = await c.req.json().catch(() => null);
-  if (!body || typeof body.mbid !== "string" || typeof body.title !== "string" || typeof body.artist !== "string") {
+  if (!body || typeof body.lastfmKey !== "string" || typeof body.title !== "string" || typeof body.artist !== "string") {
     return c.json({ error: "Invalid request body" }, 400);
   }
   const entry = await addAlbumToLibrary(userId, body);
@@ -144,10 +141,12 @@ library.get("/", async (c) => {
 
   const genreMap = new Map<string, number[]>();
   for (const e of listened) {
-    if (e.album.genre && e.rating !== null) {
-      const list = genreMap.get(e.album.genre) ?? [];
-      list.push(e.rating);
-      genreMap.set(e.album.genre, list);
+    if (e.rating !== null) {
+      for (const genre of e.album.genres) {
+        const list = genreMap.get(genre) ?? [];
+        list.push(e.rating);
+        genreMap.set(genre, list);
+      }
     }
   }
   const genreStats = [...genreMap.entries()]
@@ -175,16 +174,18 @@ library.get("/", async (c) => {
 library.post("/add", async (c) => {
   const userId = c.get("userId")!;
   const body = await c.req.parseBody<{
-    mbid: string;
+    lastfmKey: string;
     title: string;
     artist: string;
-    artistMbid: string;
     releaseYear: string;
-    genre: string;
+    genres: string;
     coverArtUrl: string;
     status?: string;
   }>();
-  await addAlbumToLibrary(userId, body);
+  await addAlbumToLibrary(userId, {
+    ...body,
+    genres: body.genres ? body.genres.split(",") : [],
+  });
   return c.redirect("/library");
 });
 
