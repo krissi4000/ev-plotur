@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import SearchPage from "./SearchPage";
 
-vi.stubGlobal("fetch", vi.fn());
+beforeEach(() => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: false,
+    json: async () => null,
+  } as Response));
+});
 
 describe("SearchPage", () => {
   it("renders page heading", () => {
@@ -13,7 +18,7 @@ describe("SearchPage", () => {
         <SearchPage />
       </MemoryRouter>
     );
-    expect(screen.getByText("Search Albums")).toBeInTheDocument();
+    expect(screen.getByText("Leita að plötum")).toBeInTheDocument();
   });
 
   it("renders search input", () => {
@@ -23,7 +28,7 @@ describe("SearchPage", () => {
       </MemoryRouter>
     );
     expect(
-      screen.getByPlaceholderText("Search for an album...")
+      screen.getByPlaceholderText("Leita að plötu...")
     ).toBeInTheDocument();
   });
 });

@@ -12,6 +12,7 @@ describe("searchReleaseGroups", () => {
         {
           id: "abc123",
           title: "OK Computer",
+          score: 100,
           "first-release-date": "1997-05-21",
           "artist-credit": [{ artist: { id: "artist1", name: "Radiohead" } }],
           tags: [
@@ -36,6 +37,7 @@ describe("searchReleaseGroups", () => {
       artist: "Radiohead",
       releaseYear: 1997,
       genre: "rock",
+      score: 100,
     });
   });
 
@@ -56,6 +58,7 @@ describe("searchReleaseGroups", () => {
         {
           id: "xyz",
           title: "Mystery Album",
+          score: 80,
           "artist-credit": [],
         },
       ],
@@ -76,6 +79,7 @@ describe("searchReleaseGroups", () => {
         {
           id: "xyz",
           title: "No Tags Album",
+          score: 50,
           "artist-credit": [{ artist: { id: "a1", name: "Artist" } }],
         },
       ],

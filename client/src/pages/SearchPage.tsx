@@ -1,23 +1,13 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import AlbumCard from "../components/AlbumCard";
-
-type Album = {
-  id: string;
-  title: string;
-  artist: string;
-  artistMbid: string | null;
-  releaseYear: number | null;
-  genre: string | null;
-  coverArtUrl: string | null;
-  score: number;
-};
+import type { SearchAlbum } from "../types";
 
 const PAGE_SIZE = 10;
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Album[]>([]);
+  const [results, setResults] = useState<SearchAlbum[]>([]);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -52,7 +42,7 @@ export default function SearchPage() {
     setLoadingMore(true);
     try {
       const res = await fetch(`/search/api?q=${encodeURIComponent(query)}&offset=${offset}`);
-      const data: Album[] = await res.json();
+      const data: SearchAlbum[] = await res.json();
       setResults((prev) => [...prev, ...data]);
       setOffset((prev) => prev + PAGE_SIZE);
     } finally {
@@ -60,7 +50,7 @@ export default function SearchPage() {
     }
   }
 
-  async function addToLibrary(album: Album, status: "LISTENED" | "UNLISTENED") {
+  async function addToLibrary(album: SearchAlbum, status: "LISTENED" | "UNLISTENED") {
     const res = await fetch("/library/api/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

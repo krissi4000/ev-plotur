@@ -5,7 +5,7 @@ type User = { username: string } | null;
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User>(undefined as any);
+  const [user, setUser] = useState<User | undefined>(undefined);
 
   useEffect(() => {
     fetch("/auth/me")

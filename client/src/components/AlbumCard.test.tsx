@@ -30,7 +30,7 @@ describe("AlbumCard", () => {
   });
 
   it("does not render image when coverArtUrl is missing", () => {
-    render(<AlbumCard album={{ ...album, coverArtUrl: undefined }} />);
+    render(<AlbumCard album={{ ...album, coverArtUrl: null }} />);
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 });

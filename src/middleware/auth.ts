@@ -1,13 +1,11 @@
 import { createMiddleware } from "hono/factory";
 import { getCookie } from "hono/cookie";
 import { prisma } from "../db/client.js";
+import type { AppVariables } from "../types.js";
 
 // athugar hvort notandi sé innskráður
 export const authMiddleware = createMiddleware<{
-  Variables: {
-    userId: string | null;
-    username: string | null;
-  };
+  Variables: AppVariables;
 }>(async (c, next) => {
   const sessionId = getCookie(c, "session");
 
@@ -37,13 +35,13 @@ export const authMiddleware = createMiddleware<{
 });
 
 export const requireAuth = createMiddleware<{
-  Variables: {
-    userId: string | null;
-    username: string | null;
-  };
+  Variables: AppVariables;
 }>(async (c, next) => {
   const userId = c.get("userId");
   if (!userId) {
+    if (c.req.path.includes("/api") || c.req.header("accept")?.includes("application/json")) {
+      return c.json({ error: "Not authenticated" }, 401);
+    }
     return c.redirect("/auth/login");
   }
   return next();

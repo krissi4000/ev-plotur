@@ -1,11 +1,5 @@
-type Album = {
-  id: string;
-  title: string;
-  artist: string;
-  releaseYear?: number | null;
-  genre?: string | null;
-  coverArtUrl?: string | null;
-};
+import { useState } from "react";
+import type { Album } from "../types";
 
 async function fetchItunesArtwork(title: string, artist: string): Promise<string | null> {
   try {
@@ -20,29 +14,33 @@ async function fetchItunesArtwork(title: string, artist: string): Promise<string
 }
 
 export default function AlbumCard({ album }: { album: Album }) {
+  const [imgSrc, setImgSrc] = useState(album.coverArtUrl);
+  const [triedFallback, setTriedFallback] = useState(false);
+
+  async function handleImageError() {
+    if (!triedFallback) {
+      setTriedFallback(true);
+      const fallback = await fetchItunesArtwork(album.title, album.artist);
+      if (fallback) {
+        setImgSrc(fallback);
+        return;
+      }
+    }
+    setImgSrc(null);
+  }
+
   return (
     <div className="rounded-3xl overflow-hidden bg-zinc-900 flex flex-col border border-zinc-700 shadow-md shadow-black/40">
-      {album.coverArtUrl ? (
+      {imgSrc ? (
         <img
-          src={album.coverArtUrl}
+          src={imgSrc}
           alt={album.title}
           className="w-full aspect-square object-cover"
-          onError={async (e) => {
-            const img = e.currentTarget;
-            const fallback = await fetchItunesArtwork(album.title, album.artist);
-            if (fallback) {
-              img.src = fallback;
-            } else {
-              img.style.display = "none";
-              img.nextElementSibling?.removeAttribute("style");
-            }
-          }}
+          onError={handleImageError}
         />
-      ) : null}
-      <div
-        className="w-full aspect-square bg-zinc-800"
-        style={album.coverArtUrl ? { display: "none" } : undefined}
-      />
+      ) : (
+        <div className="w-full aspect-square bg-zinc-800" />
+      )}
       <div className="flex flex-col gap-1 p-4">
         <span className="text-zinc-100 font-semibold leading-tight">{album.title}</span>
         <span className="text-zinc-400 text-sm">{album.artist}</span>

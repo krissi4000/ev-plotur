@@ -1,9 +1,11 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { setCookie, deleteCookie, getCookie } from "hono/cookie";
 import bcrypt from "bcryptjs";
 import { GitHub, Google, generateState, generateCodeVerifier } from "arctic";
 import { prisma } from "../db/client.js";
 import { LoginPage, RegisterPage, ErrorMessage } from "../views/auth.js";
+import type { AppVariables } from "../types.js";
 
 const SESSION_DURATION_MINUTES = 30;
 
@@ -28,7 +30,7 @@ async function createSession(userId: string): Promise<string> {
   return session.id;
 }
 
-function setSessionCookie(c: any, sessionId: string) {
+function setSessionCookie(c: Context, sessionId: string) {
   setCookie(c, "session", sessionId, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -38,8 +40,16 @@ function setSessionCookie(c: any, sessionId: string) {
   });
 }
 
-type Variables = { userId: string | null; username: string | null };
-const auth = new Hono<{ Variables: Variables }>();
+function setOAuthCookie(c: Context, name: string, value: string) {
+  setCookie(c, name, value, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Lax",
+    maxAge: 600,
+  });
+}
+
+const auth = new Hono<{ Variables: AppVariables }>();
 
 // --- Current user ---
 auth.get("/me", (c) => {
@@ -51,7 +61,11 @@ auth.get("/me", (c) => {
 
 // --- JSON API ---
 auth.post("/api/login", async (c) => {
-  const { username, password } = await c.req.json<{ username: string; password: string }>();
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body.username !== "string" || typeof body.password !== "string") {
+    return c.json({ error: "Invalid request body" }, 400);
+  }
+  const { username, password } = body;
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user || !user.passwordHash) return c.json({ error: "Invalid credentials" }, 401);
   const valid = await bcrypt.compare(password, user.passwordHash);
@@ -62,7 +76,12 @@ auth.post("/api/login", async (c) => {
 });
 
 auth.post("/api/register", async (c) => {
-  const { username, email, password } = await c.req.json<{ username: string; email?: string; password: string }>();
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body.username !== "string" || typeof body.password !== "string") {
+    return c.json({ error: "Invalid request body" }, 400);
+  }
+  const { username, password } = body;
+  const email = typeof body.email === "string" && body.email ? body.email : undefined;
   if (!username || !password) return c.json({ error: "Username and password required" }, 400);
   const existing = await prisma.user.findFirst({
     where: { OR: [{ username }, ...(email ? [{ email }] : [])] },
@@ -147,7 +166,7 @@ auth.post("/logout", async (c) => {
 auth.get("/github", async (c) => {
   const state = generateState();
   const url = github.createAuthorizationURL(state, ["user:email"]);
-  setCookie(c, "oauth_state", state, { httpOnly: true, maxAge: 600 });
+  setOAuthCookie(c, "oauth_state", state);
   return c.redirect(url.toString());
 });
 
@@ -185,8 +204,8 @@ auth.get("/google", async (c) => {
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
   const url = google.createAuthorizationURL(state, codeVerifier, ["openid", "profile", "email"]);
-  setCookie(c, "oauth_state", state, { httpOnly: true, maxAge: 600 });
-  setCookie(c, "code_verifier", codeVerifier, { httpOnly: true, maxAge: 600 });
+  setOAuthCookie(c, "oauth_state", state);
+  setOAuthCookie(c, "code_verifier", codeVerifier);
   return c.redirect(url.toString());
 });
 

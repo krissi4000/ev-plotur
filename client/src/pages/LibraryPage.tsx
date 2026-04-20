@@ -1,23 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-
-type Album = {
-  title: string;
-  artist: string;
-  releaseYear: number | null;
-  genre: string | null;
-  coverArtUrl: string | null;
-};
-
-type Entry = {
-  id: string;
-  status: string;
-  rating: number | null;
-  review: string | null;
-  addedAt: string;
-  album: Album;
-};
+import type { LibraryEntry } from "../types";
+import { sortEntries } from "../../../src/shared/sort";
 
 const SORT_OPTIONS = [
   { value: "addedAt", label: "Dagsetning" },
@@ -29,22 +14,8 @@ const SORT_OPTIONS = [
   { value: "status", label: "Staða" },
 ];
 
-function sortEntries(entries: Entry[], sort: string): Entry[] {
-  return [...entries].sort((a, b) => {
-    switch (sort) {
-      case "rating":      return (b.rating ?? -1) - (a.rating ?? -1);
-      case "artist":      return a.album.artist.localeCompare(b.album.artist);
-      case "releaseYear": return (b.album.releaseYear ?? 0) - (a.album.releaseYear ?? 0);
-      case "genre":       return (a.album.genre ?? "zzz").localeCompare(b.album.genre ?? "zzz");
-      case "title":       return a.album.title.localeCompare(b.album.title);
-      case "status":      return a.status.localeCompare(b.status);
-      default:            return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
-    }
-  });
-}
-
 export default function LibraryPage() {
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [entries, setEntries] = useState<LibraryEntry[]>([]);
   const [sort, setSort] = useState("addedAt");
   const [loading, setLoading] = useState(true);
 

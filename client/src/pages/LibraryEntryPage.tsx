@@ -1,27 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-
-type Album = {
-  title: string;
-  artist: string;
-  releaseYear: number | null;
-  genre: string | null;
-  coverArtUrl: string | null;
-};
-
-type Entry = {
-  id: string;
-  status: string;
-  rating: number | null;
-  review: string | null;
-  album: Album;
-};
+import type { LibraryEntry } from "../types";
 
 export default function LibraryEntryPage() {
   const { entryId } = useParams<{ entryId: string }>();
   const navigate = useNavigate();
-  const [entry, setEntry] = useState<Entry | null>(null);
+  const [entry, setEntry] = useState<LibraryEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("LISTENED");
   const [rating, setRating] = useState("");
@@ -31,7 +16,7 @@ export default function LibraryEntryPage() {
   useEffect(() => {
     fetch(`/library/api/${entryId}`)
       .then((r) => r.json())
-      .then((data: Entry) => {
+      .then((data: LibraryEntry) => {
         setEntry(data);
         setStatus(data.status);
         setRating(data.rating !== null ? String(data.rating) : "");
@@ -43,8 +28,8 @@ export default function LibraryEntryPage() {
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await fetch(`/library/api/${entryId}/update`, {
-      method: "POST",
+    await fetch(`/library/api/${entryId}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         status,
@@ -58,7 +43,7 @@ export default function LibraryEntryPage() {
 
   async function handleDelete() {
     if (!confirm("Fjarlægja plötu úr safni?")) return;
-    await fetch(`/library/api/${entryId}/delete`, { method: "POST" });
+    await fetch(`/library/api/${entryId}`, { method: "DELETE" });
     navigate("/library");
   }
 

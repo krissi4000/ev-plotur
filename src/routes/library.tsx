@@ -2,12 +2,59 @@ import { Hono } from "hono";
 import { requireAuth } from "../middleware/auth.js";
 import { prisma } from "../db/client.js";
 import { LibraryPage, AlbumDetailPage } from "../views/library.js";
+import { sortEntries, VALID_SORT_KEYS } from "../shared/sort.js";
+import type { AppVariables } from "../types.js";
 
-const library = new Hono<{
-  Variables: { userId: string | null; username: string | null };
-}>();
+const library = new Hono<{ Variables: AppVariables }>();
 
 library.use("*", requireAuth);
+
+interface AlbumInput {
+  mbid: string;
+  title: string;
+  artist: string;
+  artistMbid?: string | null;
+  releaseYear?: number | string | null;
+  genre?: string | null;
+  coverArtUrl?: string | null;
+  status?: string;
+}
+
+async function addAlbumToLibrary(userId: string, data: AlbumInput) {
+  const releaseYear = typeof data.releaseYear === "string"
+    ? (data.releaseYear ? parseInt(data.releaseYear, 10) : null)
+    : (data.releaseYear ?? null);
+  const validYear = typeof releaseYear === "number" && !isNaN(releaseYear) ? releaseYear : null;
+
+  const album = await prisma.album.upsert({
+    where: { mbid: data.mbid },
+    create: {
+      mbid: data.mbid,
+      title: data.title,
+      artist: data.artist,
+      artistMbid: data.artistMbid || null,
+      releaseYear: validYear,
+      genre: data.genre || null,
+      coverArtUrl: data.coverArtUrl || null,
+    },
+    update: {
+      title: data.title,
+      artist: data.artist,
+      artistMbid: data.artistMbid || null,
+      releaseYear: validYear,
+      genre: data.genre || null,
+      coverArtUrl: data.coverArtUrl || null,
+    },
+  });
+
+  const status = data.status === "UNLISTENED" ? "UNLISTENED" : "LISTENED";
+
+  return prisma.libraryEntry.upsert({
+    where: { userId_albumId: { userId, albumId: album.id } },
+    create: { userId, albumId: album.id, status },
+    update: { status },
+  });
+}
 
 // skilar öllum plötum notandans úr gagnagrunni
 // GET /library/api — JSON list of library entries
@@ -36,70 +83,41 @@ library.get("/api/:entryId", async (c) => {
 // POST /library/api/add — JSON add album to library
 library.post("/api/add", async (c) => {
   const userId = c.get("userId")!;
-  const body = await c.req.json<{
-    mbid: string;
-    title: string;
-    artist: string;
-    artistMbid?: string;
-    releaseYear?: number | null;
-    genre?: string | null;
-    coverArtUrl?: string | null;
-    status?: string;
-  }>();
-
-  const album = await prisma.album.upsert({
-    where: { mbid: body.mbid },
-    create: {
-      mbid: body.mbid,
-      title: body.title,
-      artist: body.artist,
-      artistMbid: body.artistMbid || null,
-      releaseYear: body.releaseYear ?? null,
-      genre: body.genre || null,
-      coverArtUrl: body.coverArtUrl || null,
-    },
-    update: {},
-  });
-
-  const status = body.status === "UNLISTENED" ? "UNLISTENED" : "LISTENED";
-
-  const entry = await prisma.libraryEntry.upsert({
-    where: { userId_albumId: { userId, albumId: album.id } },
-    create: { userId, albumId: album.id, status },
-    update: { status },
-  });
-
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body.mbid !== "string" || typeof body.title !== "string" || typeof body.artist !== "string") {
+    return c.json({ error: "Invalid request body" }, 400);
+  }
+  const entry = await addAlbumToLibrary(userId, body);
   return c.json({ entryId: entry.id });
 });
 
-// POST /library/api/:entryId/update — JSON update entry
-library.post("/api/:entryId/update", async (c) => {
+// PATCH /library/api/:entryId — JSON update entry
+library.patch("/api/:entryId", async (c) => {
   const userId = c.get("userId")!;
   const { entryId } = c.req.param();
-  const body = await c.req.json<{ status: string; rating: number | null; review: string }>();
+  const body = await c.req.json().catch(() => null);
+  if (!body) return c.json({ error: "Invalid request body" }, 400);
 
   const entry = await prisma.libraryEntry.findFirst({ where: { id: entryId, userId } });
   if (!entry) return c.json({ error: "Not found" }, 404);
 
+  const status = typeof body.status === "string" && body.status === "UNLISTENED" ? "UNLISTENED" : "LISTENED";
+  const rating = typeof body.rating === "number" && body.rating >= 1 && body.rating <= 10 ? body.rating : null;
+  const review = typeof body.review === "string" ? body.review.trim() || null : null;
+
   await prisma.libraryEntry.update({
     where: { id: entryId },
-    data: {
-      status: body.status === "UNLISTENED" ? "UNLISTENED" : "LISTENED",
-      rating: body.rating !== null && body.rating >= 1 && body.rating <= 10 ? body.rating : null,
-      review: body.review?.trim() || null,
-    },
+    data: { status, rating, review },
   });
 
   return c.json({ ok: true });
 });
 
-// POST /library/api/:entryId/delete — JSON delete entry
-library.post("/api/:entryId/delete", async (c) => {
+// DELETE /library/api/:entryId — JSON delete entry
+library.delete("/api/:entryId", async (c) => {
   const userId = c.get("userId")!;
   const { entryId } = c.req.param();
-
   await prisma.libraryEntry.deleteMany({ where: { id: entryId, userId } });
-
   return c.json({ ok: true });
 });
 
@@ -108,26 +126,14 @@ library.get("/", async (c) => {
   const userId = c.get("userId")!;
   const username = c.get("username")!;
   const sortBy = c.req.query("sort") ?? "addedAt";
+  const sort = VALID_SORT_KEYS.includes(sortBy) ? sortBy : "addedAt";
 
   const entries = await prisma.libraryEntry.findMany({
     where: { userId },
     include: { album: true },
   });
 
-  const validSorts = ["addedAt", "rating", "artist", "releaseYear", "genre", "title", "status"];
-  const sort = validSorts.includes(sortBy) ? sortBy : "addedAt";
-
-  const sorted = [...entries].sort((a, b) => {
-    switch (sort) {
-      case "rating":       return (b.rating ?? -1) - (a.rating ?? -1);
-      case "artist":       return a.album.artist.localeCompare(b.album.artist);
-      case "releaseYear":  return (b.album.releaseYear ?? 0) - (a.album.releaseYear ?? 0);
-      case "genre":        return (a.album.genre ?? "zzz").localeCompare(b.album.genre ?? "zzz");
-      case "title":        return a.album.title.localeCompare(b.album.title);
-      case "status":       return a.status.localeCompare(b.status);
-      default:             return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
-    }
-  });
+  const sorted = sortEntries(entries, sort);
 
   const listened = entries.filter((e) => e.status === "LISTENED");
   const toListenCount = entries.filter((e) => e.status === "UNLISTENED").length;
@@ -165,7 +171,7 @@ library.get("/", async (c) => {
   );
 });
 
-// POST /library/add — called from search results
+// POST /library/add — called from search results (HTML form)
 library.post("/add", async (c) => {
   const userId = c.get("userId")!;
   const body = await c.req.parseBody<{
@@ -178,29 +184,7 @@ library.post("/add", async (c) => {
     coverArtUrl: string;
     status?: string;
   }>();
-
-  const album = await prisma.album.upsert({
-    where: { mbid: body.mbid },
-    create: {
-      mbid: body.mbid,
-      title: body.title,
-      artist: body.artist,
-      artistMbid: body.artistMbid || null,
-      releaseYear: body.releaseYear ? parseInt(body.releaseYear) : null,
-      genre: body.genre || null,
-      coverArtUrl: body.coverArtUrl || null,
-    },
-    update: {},
-  });
-
-  const status = body.status === "UNLISTENED" ? "UNLISTENED" : "LISTENED";
-
-  await prisma.libraryEntry.upsert({
-    where: { userId_albumId: { userId, albumId: album.id } },
-    create: { userId, albumId: album.id, status },
-    update: { status },
-  });
-
+  await addAlbumToLibrary(userId, body);
   return c.redirect("/library");
 });
 
@@ -219,7 +203,7 @@ library.get("/:entryId", async (c) => {
   return c.html(<AlbumDetailPage entry={entry} entryId={entryId} />);
 });
 
-// POST /library/:entryId/update
+// POST /library/:entryId/update (HTML form)
 library.post("/:entryId/update", async (c) => {
   const userId = c.get("userId")!;
   const { entryId } = c.req.param();
@@ -248,7 +232,7 @@ library.post("/:entryId/update", async (c) => {
   return c.redirect(`/library/${entryId}`);
 });
 
-// POST /library/:entryId/delete
+// POST /library/:entryId/delete (HTML form)
 library.post("/:entryId/delete", async (c) => {
   const userId = c.get("userId")!;
   const { entryId } = c.req.param();

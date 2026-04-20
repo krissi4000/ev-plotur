@@ -2,10 +2,9 @@ import { Hono } from "hono";
 import { searchReleaseGroups } from "../services/musicbrainz.js";
 import { requireAuth } from "../middleware/auth.js";
 import { SearchPage, SearchResults } from "../views/search.js";
+import type { AppVariables } from "../types.js";
 
-const search = new Hono<{
-  Variables: { userId: string | null; username: string | null };
-}>();
+const search = new Hono<{ Variables: AppVariables }>();
 
 search.use("*", requireAuth);
 
