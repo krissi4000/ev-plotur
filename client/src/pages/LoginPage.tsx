@@ -41,7 +41,7 @@ export default function LoginPage() {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Notendanafn"
             required
-            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-orange-500"
           />
           <input
             type="password"
@@ -49,13 +49,13 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Lykilorð"
             required
-            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-orange-500"
           />
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="bg-zinc-100 text-zinc-900 font-medium rounded-lg py-2 hover:bg-white disabled:opacity-50"
+            className="btn-primary py-2"
           >
             {loading ? "Skrái inn..." : "Innskrá"}
           </button>
@@ -77,7 +77,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center mt-6">
-          <Link to="/auth/register" className="text-zinc-400 hover:text-zinc-100 text-sm">
+          <Link to="/auth/register" className="text-zinc-400 hover:text-orange-400 text-sm">
             Búa til aðgang
           </Link>
         </p>

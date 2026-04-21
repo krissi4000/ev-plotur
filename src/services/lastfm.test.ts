@@ -29,7 +29,7 @@ describe("searchAlbums", () => {
       album: {
         name: "OK Computer",
         artist: "Radiohead",
-        wiki: { published: "21 May 1997" },
+        wiki: { published: "11 Nov 2022, 15:31", content: "OK Computer is the third album by the English rock band Radiohead, released in 1997." },
         tags: {
           tag: [
             { name: "alternative rock", url: "https://www.last.fm/tag/alternative+rock" },

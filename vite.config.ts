@@ -11,8 +11,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/auth": "http://localhost:3000",
-      "/search": "http://localhost:3000",
-      "/library": "http://localhost:3000",
+      "/search/api": "http://localhost:3000",
+      "/library/api": "http://localhost:3000",
     },
   },
 });

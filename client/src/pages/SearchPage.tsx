@@ -49,23 +49,30 @@ export default function SearchPage() {
     }
   }
 
-  async function addToLibrary(album: SearchAlbum, status: "LISTENED" | "UNLISTENED") {
-    const res = await fetch("/library/api/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        lastfmKey: album.lastfmKey,
-        title: album.title,
-        artist: album.artist,
-        releaseYear: album.releaseYear,
-        genres: album.genres,
-        coverArtUrl: album.coverArtUrl,
-        status,
-      }),
-    });
-    const data = await res.json();
-    if (data.entryId) {
-      setAdded((prev) => ({ ...prev, [album.lastfmKey]: status }));
+  async function addToLibrary(album: SearchAlbum, status: "LISTENED" | "UNLISTENED"): Promise<boolean> {
+    try {
+      const res = await fetch("/library/api/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lastfmKey: album.lastfmKey,
+          title: album.title,
+          artist: album.artist,
+          releaseYear: album.releaseYear,
+          genres: album.genres,
+          coverArtUrl: album.coverArtUrl,
+          status,
+        }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      if (data.entryId) {
+        setAdded((prev) => ({ ...prev, [album.lastfmKey]: status }));
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
     }
   }
 
@@ -82,43 +89,40 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Leita að plötu..."
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-orange-500"
           />
-          {loading && <span className="text-zinc-500 text-sm shrink-0">Leita...</span>}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {results.map((album) => (
-            <div key={album.lastfmKey} className="flex flex-col gap-2">
-              <AlbumCard album={album} />
-              {added[album.lastfmKey] ? (
-                <span className="text-zinc-500 text-xs text-center">
-                  {added[album.lastfmKey] === "LISTENED" ? "Bætt í safn" : "Bætt á hlustunarlista"}
-                </span>
-              ) : (
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => addToLibrary(album, "LISTENED")}
-                    className="flex-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-1.5"
-                  >
-                    + Safn
-                  </button>
-                  <button
-                    onClick={() => addToLibrary(album, "UNLISTENED")}
-                    className="flex-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-1.5"
-                  >
-                    + Listi
-                  </button>
+        {loading && results.length === 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="relative aspect-square rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800">
+                <div className="w-full h-full skeleton-shimmer" />
+                <div className="absolute bottom-0 left-0 p-4 flex flex-col gap-2">
+                  <div className="h-3.5 w-24 bg-zinc-700 rounded-full skeleton-shimmer" />
+                  <div className="h-3 w-16 bg-zinc-800 rounded-full skeleton-shimmer" />
+                  <div className="h-3 w-10 bg-zinc-800 rounded-full skeleton-shimmer" />
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {results.map((album) => (
+              <AlbumCard
+                key={album.lastfmKey}
+                album={album}
+                onAdd={(status) => addToLibrary(album, status)}
+                added={!!added[album.lastfmKey]}
+              />
+            ))}
+          </div>
+        )}
         {results.length > 0 && (
           <div className="mt-6 text-center">
             <button
               onClick={loadMore}
               disabled={loadingMore}
-              className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 rounded-lg px-6 py-2 text-sm"
+              className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-orange-400 rounded-lg px-6 py-2 text-sm"
             >
               {loadingMore ? "Hleð..." : "Sjá fleiri"}
             </button>

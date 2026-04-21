@@ -21,17 +21,17 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center gap-6 border-b border-zinc-800 px-6 py-4 mb-8">
-      <Link to="/" className="text-zinc-100 font-bold text-lg hover:text-white">Plata</Link>
-      <Link to="/search" className="text-zinc-400 hover:text-zinc-100">Leita</Link>
-      <Link to="/library" className="text-zinc-400 hover:text-zinc-100">Safn</Link>
+      <Link to="/" className="text-gradient-orange font-bold text-lg">Plata</Link>
+      <Link to="/search" className="text-zinc-400 hover:text-orange-400">Leita</Link>
+      <Link to="/library" className="text-zinc-400 hover:text-orange-400">Safn</Link>
       <div className="ml-auto flex items-center gap-4">
         {user ? (
           <>
             <span className="text-zinc-400">{user.username}</span>
-            <button onClick={logout} className="text-zinc-500 hover:text-zinc-300">Útskrá</button>
+            <button onClick={logout} className="text-zinc-500 hover:text-orange-400">Útskrá</button>
           </>
         ) : user === null ? (
-          <Link to="/auth/login" className="text-zinc-400 hover:text-zinc-100">Innskrá</Link>
+          <Link to="/auth/login" className="text-zinc-400 hover:text-orange-400">Innskrá</Link>
         ) : null}
       </div>
     </nav>

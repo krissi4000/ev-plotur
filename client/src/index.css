@@ -16,7 +16,45 @@
   font-display: swap;
 }
 
+:root {
+  --orange-dark: #e85d04;
+  --orange-light: #ff9e00;
+  --gradient-orange: linear-gradient(135deg, var(--orange-dark), var(--orange-light));
+}
+
 body {
   @apply bg-zinc-950 text-zinc-100;
   font-family: "Karrik", system-ui, sans-serif;
+}
+
+.btn-primary {
+  background: var(--gradient-orange);
+  color: #18181b;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.text-gradient-orange {
+  background: var(--gradient-orange);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

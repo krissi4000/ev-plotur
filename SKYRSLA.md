@@ -22,3 +22,5 @@ Upprunalega notaði ég MusicBrainz, en ég skipti yfir í Last.fm API útaf nok
 (hvað gekk vel?)
 (hvað gekk illa?)
 (hvað var áhugavert?)
+
+

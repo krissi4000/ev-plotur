@@ -32,7 +32,7 @@ interface GetInfoResponse {
     name: string;
     artist: string;
     tags?: { tag: Array<{ name: string; url: string }> };
-    wiki?: { published?: string };
+    wiki?: { published?: string; content?: string };
     image: Array<{ "#text": string; size: string }>;
   };
 }
@@ -41,9 +41,9 @@ function buildKey(artist: string, album: string): string {
   return `${artist.toLowerCase().trim()}:${album.toLowerCase().trim()}`;
 }
 
-function extractYear(wiki?: { published?: string }): number | null {
-  if (!wiki?.published) return null;
-  const match = wiki.published.match(/\b(\d{4})\b/);
+function extractYear(wiki?: { published?: string; content?: string }): number | null {
+  if (!wiki?.content) return null;
+  const match = wiki.content.match(/released\s+(?:on\s+)?(?:[\w\s,]*\s)?(\d{4})\b/i);
   return match ? parseInt(match[1], 10) : null;
 }
 
@@ -59,6 +59,7 @@ function getLargestImage(images: Array<{ "#text": string; size: string }>): stri
 function filterGenres(tags?: { tag: Array<{ name: string; url: string }> }): string[] {
   if (!tags?.tag || !Array.isArray(tags.tag)) return [];
   return tags.tag
+    .filter((t) => !/^\d{4}$/.test(t.name))
     .slice(0, 4)
     .map((t) => t.name);
 }
@@ -83,21 +84,23 @@ export async function searchAlbums(query: string, limit = 10, page = 1): Promise
 
   const enriched: LastfmAlbum[] = [];
 
-  for (const album of albums) {
-    const info = await getAlbumInfo(album.artist, album.name);
+  for (let i = 0; i < albums.length; i += 5) {
+    const batch = albums.slice(i, i + 5);
+    const results = await Promise.all(
+      batch.map(async (album) => {
+        const info = await getAlbumInfo(album.artist, album.name);
 
-    const genres = filterGenres(info?.album?.tags);
-    const releaseYear = extractYear(info?.album?.wiki);
-    const coverArtUrl = getLargestImage(info?.album?.image ?? album.image);
-
-    enriched.push({
-      lastfmKey: buildKey(album.artist, album.name),
-      title: album.name,
-      artist: album.artist,
-      releaseYear,
-      genres,
-      coverArtUrl,
-    });
+        return {
+          lastfmKey: buildKey(album.artist, album.name),
+          title: album.name,
+          artist: album.artist,
+          releaseYear: extractYear(info?.album?.wiki),
+          genres: filterGenres(info?.album?.tags),
+          coverArtUrl: getLargestImage(info?.album?.image ?? album.image),
+        };
+      })
+    );
+    enriched.push(...results);
   }
 
   return enriched;

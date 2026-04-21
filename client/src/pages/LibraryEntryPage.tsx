@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import useAuth from "../hooks/useAuth";
 import type { LibraryEntry } from "../types";
@@ -8,15 +8,18 @@ export default function LibraryEntryPage() {
   const { loading: authLoading } = useAuth();
   const { entryId } = useParams<{ entryId: string }>();
   const navigate = useNavigate();
-  const [entry, setEntry] = useState<LibraryEntry | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("LISTENED");
-  const [rating, setRating] = useState("");
-  const [review, setReview] = useState("");
+  const location = useLocation();
+  const prefetched = (location.state as { entry?: LibraryEntry } | null)?.entry ?? null;
+  const [entry, setEntry] = useState<LibraryEntry | null>(prefetched);
+  const [loading, setLoading] = useState(!prefetched);
+  const [status, setStatus] = useState(prefetched?.status ?? "LISTENED");
+  const [rating, setRating] = useState(prefetched?.rating != null ? String(prefetched.rating) : "");
+  const [review, setReview] = useState(prefetched?.review ?? "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
+    if (prefetched) return;
     fetch(`/library/api/${entryId}`)
       .then((r) => {
         if (!r.ok) return null;
@@ -30,7 +33,7 @@ export default function LibraryEntryPage() {
         setReview(data.review ?? "");
       })
       .finally(() => setLoading(false));
-  }, [entryId, authLoading]);
+  }, [entryId, authLoading, prefetched]);
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
@@ -63,7 +66,7 @@ export default function LibraryEntryPage() {
       <Navbar />
       <div className="max-w-2xl mx-auto px-6">
         <p className="mb-6">
-          <Link to="/library" className="text-zinc-400 hover:text-zinc-100 text-sm">← Til baka í safn</Link>
+          <Link to="/library" className="text-zinc-400 hover:text-orange-400 text-sm">← Til baka í safn</Link>
         </p>
 
         <div className="flex gap-6 mb-8">
@@ -93,7 +96,7 @@ export default function LibraryEntryPage() {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-orange-500"
             >
               <option value="LISTENED">Hlustað</option>
               <option value="UNLISTENED">Á að hlusta</option>
@@ -109,7 +112,7 @@ export default function LibraryEntryPage() {
               value={rating}
               onChange={(e) => setRating(e.target.value)}
               placeholder="Engin einkunn"
-              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-orange-500"
             />
           </label>
 
@@ -120,14 +123,14 @@ export default function LibraryEntryPage() {
               onChange={(e) => setReview(e.target.value)}
               rows={4}
               placeholder="Skrifaðu eitthvað um þessa plötu..."
-              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 resize-y"
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-orange-500 resize-y"
             />
           </label>
 
           <button
             type="submit"
             disabled={saving}
-            className="bg-zinc-100 text-zinc-900 font-medium rounded-lg py-2 hover:bg-white disabled:opacity-50"
+            className="btn-primary py-2"
           >
             {saving ? "Vistandi..." : "Vista"}
           </button>

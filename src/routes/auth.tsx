@@ -4,7 +4,6 @@ import { setCookie, deleteCookie, getCookie } from "hono/cookie";
 import bcrypt from "bcryptjs";
 import { GitHub, Google, generateState, generateCodeVerifier } from "arctic";
 import { prisma } from "../db/client.js";
-import { LoginPage, RegisterPage, ErrorMessage } from "../views/auth.js";
 import type { AppVariables } from "../types.js";
 
 const SESSION_DURATION_MINUTES = 30;
@@ -101,65 +100,6 @@ auth.post("/api/logout", async (c) => {
     deleteCookie(c, "session");
   }
   return c.json({ ok: true });
-});
-
-auth.post("/register", async (c) => {
-  const { username, email, password } = await c.req.parseBody<{
-    username: string;
-    email: string;
-    password: string;
-  }>();
-
-  if (!username || !password) {
-    return c.html(<ErrorMessage message="Username and password required." />, 400);
-  }
-
-  const existing = await prisma.user.findFirst({
-    where: { OR: [{ username }, ...(email ? [{ email }] : [])] },
-  });
-  if (existing) {
-    return c.html(<ErrorMessage message="Username or email already taken." />, 400);
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: { username, email: email || null, passwordHash },
-  });
-
-  const sessionId = await createSession(user.id);
-  setSessionCookie(c, sessionId);
-  return c.redirect("/");
-});
-
-auth.post("/login", async (c) => {
-  const { username, password } = await c.req.parseBody<{
-    username: string;
-    password: string;
-  }>();
-
-  const user = await prisma.user.findUnique({ where: { username } });
-  if (!user || !user.passwordHash) {
-    return c.html(<ErrorMessage message="Invalid credentials." />, 401);
-  }
-
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) {
-    return c.html(<ErrorMessage message="Invalid credentials." />, 401);
-  }
-
-  const sessionId = await createSession(user.id);
-  setSessionCookie(c, sessionId);
-  return c.redirect("/");
-});
-
-// --- Logout ---
-auth.post("/logout", async (c) => {
-  const sessionId = getCookie(c, "session");
-  if (sessionId) {
-    await prisma.session.delete({ where: { id: sessionId } }).catch(() => {});
-    deleteCookie(c, "session");
-  }
-  return c.redirect("/auth/login");
 });
 
 // --- GitHub OAuth ---

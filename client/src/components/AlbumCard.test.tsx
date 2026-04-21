@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import AlbumCard from "./AlbumCard";
 
 const album = {
@@ -31,5 +32,25 @@ describe("AlbumCard", () => {
   it("does not render image when coverArtUrl is missing", () => {
     render(<AlbumCard album={{ ...album, coverArtUrl: null }} />);
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("wraps the card in a <Link> to `linkTo` when provided", () => {
+    render(
+      <MemoryRouter>
+        <AlbumCard album={album} linkTo="/library/entry-123" />
+      </MemoryRouter>
+    );
+    const anchor = screen.getByRole("link");
+    expect(anchor).toHaveAttribute("href", "/library/entry-123");
+    expect(anchor).toHaveTextContent("OK Computer");
+  });
+
+  it("does not render the '+' button when linkTo is provided, even with onAdd", () => {
+    render(
+      <MemoryRouter>
+        <AlbumCard album={album} linkTo="/library/entry-123" onAdd={async () => true} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByRole("button", { name: "+" })).not.toBeInTheDocument();
   });
 });
