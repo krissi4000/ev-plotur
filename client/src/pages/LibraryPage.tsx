@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import useAuth from "../hooks/useAuth";
 import type { LibraryEntry } from "../types";
 import { sortEntries } from "../../../src/shared/sort";
 
@@ -15,16 +16,18 @@ const SORT_OPTIONS = [
 ];
 
 export default function LibraryPage() {
+  const { loading: authLoading } = useAuth();
   const [entries, setEntries] = useState<LibraryEntry[]>([]);
   const [sort, setSort] = useState("addedAt");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     fetch("/library/api")
-      .then((r) => r.json())
-      .then((data) => setEntries(data))
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setEntries(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading]);
 
   const sorted = sortEntries(entries, sort);
   const listened = entries.filter((e) => e.status === "LISTENED");
@@ -33,6 +36,8 @@ export default function LibraryPage() {
   const avgRating = rated.length
     ? (rated.reduce((sum, e) => sum + e.rating!, 0) / rated.length).toFixed(1)
     : null;
+
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen">

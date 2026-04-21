@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import useAuth from "../hooks/useAuth";
 import type { LibraryEntry } from "../types";
 
 export default function LibraryEntryPage() {
+  const { loading: authLoading } = useAuth();
   const { entryId } = useParams<{ entryId: string }>();
   const navigate = useNavigate();
   const [entry, setEntry] = useState<LibraryEntry | null>(null);
@@ -14,16 +16,21 @@ export default function LibraryEntryPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
     fetch(`/library/api/${entryId}`)
-      .then((r) => r.json())
-      .then((data: LibraryEntry) => {
+      .then((r) => {
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then((data: LibraryEntry | null) => {
+        if (!data) return;
         setEntry(data);
         setStatus(data.status);
         setRating(data.rating !== null ? String(data.rating) : "");
         setReview(data.review ?? "");
       })
       .finally(() => setLoading(false));
-  }, [entryId]);
+  }, [entryId, authLoading]);
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +54,7 @@ export default function LibraryEntryPage() {
     navigate("/library");
   }
 
+  if (authLoading) return null;
   if (loading) return <div className="min-h-screen"><Navbar /><p className="text-zinc-500 px-6">Hleð...</p></div>;
   if (!entry) return <div className="min-h-screen"><Navbar /><p className="text-zinc-500 px-6">Fannst ekki.</p></div>;
 

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import AlbumCard from "../components/AlbumCard";
+import useAuth from "../hooks/useAuth";
 import type { SearchAlbum } from "../types";
 
 export default function SearchPage() {
+  const { loading: authLoading } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchAlbum[]>([]);
   const [page, setPage] = useState(1);
@@ -23,7 +25,7 @@ export default function SearchPage() {
       try {
         const res = await fetch(`/search/api?q=${encodeURIComponent(query)}&page=1`);
         const data = await res.json();
-        setResults(data);
+        setResults(Array.isArray(data) ? data : []);
         setPage(2);
       } catch {
         setResults([]);
@@ -39,8 +41,8 @@ export default function SearchPage() {
     setLoadingMore(true);
     try {
       const res = await fetch(`/search/api?q=${encodeURIComponent(query)}&page=${page}`);
-      const data: SearchAlbum[] = await res.json();
-      setResults((prev) => [...prev, ...data]);
+      const data = await res.json();
+      if (Array.isArray(data)) setResults((prev) => [...prev, ...data]);
       setPage((prev) => prev + 1);
     } finally {
       setLoadingMore(false);
@@ -66,6 +68,8 @@ export default function SearchPage() {
       setAdded((prev) => ({ ...prev, [album.lastfmKey]: status }));
     }
   }
+
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen">

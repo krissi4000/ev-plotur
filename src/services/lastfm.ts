@@ -31,7 +31,7 @@ interface GetInfoResponse {
   album: {
     name: string;
     artist: string;
-    tags?: { tag: Array<{ name: string; count: number }> };
+    tags?: { tag: Array<{ name: string; url: string }> };
     wiki?: { published?: string };
     image: Array<{ "#text": string; size: string }>;
   };
@@ -56,11 +56,9 @@ function getLargestImage(images: Array<{ "#text": string; size: string }>): stri
   return null;
 }
 
-function filterGenres(tags?: { tag: Array<{ name: string; count: number }> }): string[] {
-  if (!tags?.tag) return [];
+function filterGenres(tags?: { tag: Array<{ name: string; url: string }> }): string[] {
+  if (!tags?.tag || !Array.isArray(tags.tag)) return [];
   return tags.tag
-    .filter((t) => t.count >= 50)
-    .sort((a, b) => b.count - a.count)
     .slice(0, 4)
     .map((t) => t.name);
 }

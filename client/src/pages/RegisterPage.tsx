@@ -19,12 +19,14 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email: email || undefined, password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setError(data.error ?? "Nýskráning mistókst");
+        setError(data?.error ?? "Nýskráning mistókst");
       } else {
         navigate("/");
       }
+    } catch {
+      setError("Nýskráning mistókst");
     } finally {
       setLoading(false);
     }

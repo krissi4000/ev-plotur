@@ -18,12 +18,14 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setError(data.error ?? "Innskráning mistókst");
+        setError(data?.error ?? "Innskráning mistókst");
       } else {
         navigate("/");
       }
+    } catch {
+      setError("Innskráning mistókst");
     } finally {
       setLoading(false);
     }

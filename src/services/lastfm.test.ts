@@ -32,11 +32,11 @@ describe("searchAlbums", () => {
         wiki: { published: "21 May 1997" },
         tags: {
           tag: [
-            { name: "alternative rock", count: 100 },
-            { name: "rock", count: 87 },
-            { name: "experimental", count: 64 },
-            { name: "electronic", count: 52 },
-            { name: "british", count: 30 },
+            { name: "alternative rock", url: "https://www.last.fm/tag/alternative+rock" },
+            { name: "rock", url: "https://www.last.fm/tag/rock" },
+            { name: "experimental", url: "https://www.last.fm/tag/experimental" },
+            { name: "electronic", url: "https://www.last.fm/tag/electronic" },
+            { name: "british", url: "https://www.last.fm/tag/british" },
           ],
         },
         image: [
@@ -63,26 +63,26 @@ describe("searchAlbums", () => {
     });
   });
 
-  it("filters out tags with count below 50", async () => {
+  it("takes first 4 tags when more are available", async () => {
     const searchResponse = {
       results: {
         albummatches: {
-          album: [
-            { name: "Album", artist: "Artist", image: [] },
-          ],
+          album: [{ name: "A", artist: "B", image: [] }],
         },
       },
     };
 
     const getInfoResponse = {
       album: {
-        name: "Album",
-        artist: "Artist",
+        name: "A",
+        artist: "B",
         tags: {
           tag: [
-            { name: "rock", count: 100 },
-            { name: "noise", count: 40 },
-            { name: "ambient", count: 20 },
+            { name: "t1", url: "" },
+            { name: "t2", url: "" },
+            { name: "t3", url: "" },
+            { name: "t4", url: "" },
+            { name: "t5", url: "" },
           ],
         },
         image: [],
@@ -93,8 +93,8 @@ describe("searchAlbums", () => {
       .mockResolvedValueOnce({ ok: true, json: async () => searchResponse } as Response)
       .mockResolvedValueOnce({ ok: true, json: async () => getInfoResponse } as Response);
 
-    const results = await searchAlbums("Album", 1);
-    expect(results[0].genres).toEqual(["rock"]);
+    const results = await searchAlbums("A", 1);
+    expect(results[0].genres).toEqual(["t1", "t2", "t3", "t4"]);
   });
 
   it("returns empty genres when no tags present", async () => {
@@ -128,39 +128,5 @@ describe("searchAlbums", () => {
   it("throws when search API returns an error status", async () => {
     vi.mocked(fetch).mockResolvedValue({ ok: false, status: 500 } as Response);
     await expect(searchAlbums("test")).rejects.toThrow("Last.fm API error: 500");
-  });
-
-  it("limits to max 4 genres even if more have count >= 50", async () => {
-    const searchResponse = {
-      results: {
-        albummatches: {
-          album: [{ name: "A", artist: "B", image: [] }],
-        },
-      },
-    };
-
-    const getInfoResponse = {
-      album: {
-        name: "A",
-        artist: "B",
-        tags: {
-          tag: [
-            { name: "t1", count: 100 },
-            { name: "t2", count: 90 },
-            { name: "t3", count: 80 },
-            { name: "t4", count: 70 },
-            { name: "t5", count: 60 },
-          ],
-        },
-        image: [],
-      },
-    };
-
-    vi.mocked(fetch)
-      .mockResolvedValueOnce({ ok: true, json: async () => searchResponse } as Response)
-      .mockResolvedValueOnce({ ok: true, json: async () => getInfoResponse } as Response);
-
-    const results = await searchAlbums("A", 1);
-    expect(results[0].genres).toHaveLength(4);
   });
 });
