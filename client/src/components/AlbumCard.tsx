@@ -48,11 +48,20 @@ export default function AlbumCard({
     setImgSrc(null);
   }
 
-  function handlePlusClick(e: React.MouseEvent) {
-    e.stopPropagation();
+  function openMenu() {
     setState("menu");
     clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => setState("idle"), 4000);
+  }
+
+  function handleCardClick() {
+    if (added || !onAdd || state !== "idle") return;
+    openMenu();
+  }
+
+  function handlePlusClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    openMenu();
   }
 
   async function handleAdd(status: "LISTENED" | "UNLISTENED") {
@@ -66,8 +75,10 @@ export default function AlbumCard({
     }
   }
 
+  const clickable = !linkTo && !added && !!onAdd;
   const rootClass =
-    "relative aspect-square rounded-3xl overflow-hidden bg-zinc-900 group transition-transform duration-200 ease-out hover:scale-110 hover:z-10 hover:shadow-2xl hover:shadow-black/60";
+    "relative aspect-square rounded-3xl overflow-hidden bg-zinc-900 group transition-transform duration-200 ease-out hover:scale-110 hover:z-10 hover:shadow-2xl hover:shadow-black/60" +
+    (clickable ? " cursor-pointer" : "");
 
   const content = (
     <>
@@ -135,5 +146,5 @@ export default function AlbumCard({
     );
   }
 
-  return <div className={rootClass}>{content}</div>;
+  return <div className={rootClass} onClick={handleCardClick}>{content}</div>;
 }
