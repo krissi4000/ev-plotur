@@ -82,9 +82,9 @@ export default function SearchPage() {
           />
           {loading && <span className="text-zinc-500 text-sm shrink-0">Leita...</span>}
         </div>
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {results.map((album) => (
-            <div key={album.lastfmKey} className="w-44 flex flex-col gap-2">
+            <div key={album.lastfmKey} className="flex flex-col gap-2">
               <AlbumCard album={album} />
               {added[album.lastfmKey] ? (
                 <span className="text-zinc-500 text-xs text-center">
